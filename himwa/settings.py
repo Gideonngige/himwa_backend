@@ -52,6 +52,7 @@ CORS_ALLOWED_ORIGINS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,6 +60,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / "staticfiles" 
 
 ROOT_URLCONF = 'himwa.urls'
 
@@ -89,6 +93,18 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'himwadb',
+        'USER': 'himwadb_user',
+        'PASSWORD': 'w9LsjV9nyqvEDsMP1KZhK35cdnCH7ZPG',
+        'HOST': 'dpg-d2ia9cmmcj7s73e5i6c0-a.oregon-postgres.render.com', 
+        'PORT': '5432',      
+    }
+}
+
 
 
 # Password validation
