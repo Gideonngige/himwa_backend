@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Himwa API Documentation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    header {
+      background: #5757cc;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 900px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #5757cc;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 5px;
+      margin-top: 30px;
+    }
+
+    .api {
+      margin-bottom: 20px;
+    }
+
+    .api h3 {
+      color: #444;
+      margin-bottom: 5px;
+    }
+
+    .endpoint {
+      background: #f3f3ff;
+      border-left: 5px solid #5757cc;
+      padding: 10px;
+      font-family: monospace;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+
+    .response {
+      background: #f7f7f7;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-family: monospace;
+      overflow-x: auto;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      background: #eee;
+      font-size: 0.9rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>📘 Himwa API Documentation</h1>
+  </header>
+
+  <div class="container">
+    <h2>Available APIs</h2>
+
+    <div class="api">
+      <h3>1. Index</h3>
+      <div class="endpoint">GET /</div>
+      <p>
+        This API returns the default documentation page you are currently viewing.
+      </p>
+    </div>
+
+    <div class="api">
+      <h3>2. Sign In</h3>
+      <div class="endpoint">POST /signin</div>
+      <p>
+        Allows a user to sign in using <code>email</code> and <code>password</code>.
+        On success, it returns the user details and a token.
+      </p>
+      <p><b>Response fields:</b></p>
+      <ul>
+        <li><i>fullname</i></li>
+        <li><i>email</i></li>
+        <li><i>phonenumber</i></li>
+        <li><i>area_of_residence</i></li>
+        <li><i>profile_image_url</i></li>
+        <li><i>date_joined</i></li>
+        <li><i>token</i></li>
+      </ul>
+      <p><b>Example Response:</b></p>
+      <div class="response">
+        {
+          "fullname": "John Doe",<br>
+          "email": "john@example.com",<br>
+          "phonenumber": "0712345678",<br>
+          "area_of_residence": "Nairobi",<br>
+          "profile_image_url": "https://res.cloudinary.com/...",<br>
+          "date_joined": "2025-08-20T10:00:00Z",<br>
+          "token": "eyJhbGciOi..."<br>
+        }
+      </div>
+    </div>
+
+    <!-- Sign Up -->
+    <div class="api">
+      <h3>3. Sign Up</h3>
+      <div class="endpoint">POST /signup</div>
+      <p>
+        Registers a new member. The user must provide required fields.
+      </p>
+      <p><b>Required fields:</b></p>
+      <ul>
+        <li>fullname</li>
+        <li>national_id</li>
+        <li>phonenumber</li>
+        <li>email</li>
+        <li>area_of_residence</li>
+        <li>password</li>
+      </ul>
+      <div class="response">
+        {
+          "message": "Successfully registered"
+        }
+      </div>
+    </div>
+
+    <!-- Reset Password -->
+    <div class="api">
+      <h3>4. Reset Password</h3>
+      <div class="endpoint">POST /resetpassword/&lt;email&gt;</div>
+      <p>
+        Sends a password reset email to the given address.
+      </p>
+      <div class="response">
+        {
+          "message": "A email to reset password is successfully sent"
+        }
+      </div>
+    </div>
+
+    <!-- Get All Members -->
+    <div class="api">
+      <h3>5. Get All Members</h3>
+      <div class="endpoint">GET /members</div>
+      <p>
+        Retrieves a list of all registered members. Requires a valid Firebase token.
+      </p>
+      <div class="response">
+        [
+          {<br>
+          "id": 1,<br>
+          "fullname": "Jane Doe",<br>
+          "national_id": "12345678",<br>
+          "phonenumber": "0723456789",<br>
+          "email": "jane@example.com",<br>
+          "area_of_residence": "Kisumu",<br>
+          "profile_image": "https://res.cloudinary.com/...",<br>
+          "expo_token": "qOE08EA5OCq-yL323EhTY8",<br>
+          "joined_date": "2025-08-19T15:00:00Z"<br>
+          }<br>
+        ]
+      </div>
+    </div>
+
+
+    <!-- Billing APIs -->
+    <h2>Billing APIs</h2>
+
+    <div class="api">
+      <h3>6. Create Bill</h3>
+      <div class="endpoint">POST /create_bill</div>
+      <p>Create a new bill for a member.</p>
+      <p><b>Required fields:</b> member_id, biller_id, units, due_date</p>
+      <div class="response">
+        {
+          "message": "Bill created successfully",<br>
+          "bill_id": 10,<br>
+          "member": "Jane Doe",<br>
+          "amount": 200,<br>
+          "status": "UNPAID",<br>
+          "due_date": "2025-09-01T00:00:00Z"<br>
+        }
+      </div>
+    </div>
+
+    <div class="api">
+      <h3>7. Get All Bills</h3>
+      <div class="endpoint">GET /get_all_bills</div>
+      <p>Returns a list of all bills.</p>
+    </div>
+
+    <div class="api">
+      <h3>8. Get Member Bills</h3>
+      <div class="endpoint">GET /get_member_bills/&lt;member_id&gt;</div>
+      <p>Returns all bills for a given member.</p>
+      <div class="response">
+        [
+          {<br>
+          "id": 5,<br>
+          "biller_id__member_id__fullname": "Water Team",<br>
+          "amount": 400,<br>
+          "date": "2025-08-15T10:30:00Z",<br>
+          "due_date": "2025-09-01T00:00:00Z",<br>
+          "status": "UNPAID"<br>
+          }<br>
+        ]
+      </div>
+    </div>
+
+    <div class="api">
+      <h3>9. Pay Bill</h3>
+      <div class="endpoint">GET /pay_bill/&lt;bill_id&gt;/&lt;payment_amount&gt;/&lt;payment_method&gt;/&lt;member_id&gt;</div>
+      <p>Processes a payment for a specific bill and updates its status.</p>
+      <div class="response">
+        {
+          "message": "Payment processed successfully",<br>
+          "bill_id": 5,<br>
+          "bill_total": 400,<br>
+          "amount_paid": 400,<br>
+          "remaining_balance": 0,<br>
+          "status": "PAID",<br>
+          "payment": {<br>
+            "payment_id": 21,<br>
+            "amount": "400.00",<br>
+            "method": "MOBILE",<br>
+            "date": "2025-08-20T12:00:00Z"<br>
+          }<br>
+        }
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <h2>Transactions APIs</h2>
+    <div class="api">
+      <h3>10. Get Member Transactions</h3>
+      <div class="endpoint">GET /transactions/&lt;member_id&gt;</div>
+      <p>Fetch all payments made by a member.</p>
+      <div class="response">
+        [
+          {<br>
+          "id": 1,<br>
+          "bill_id": 5,<br>
+          "amount": "200.00",<br>
+          "payment_method": "MOBILE",<br>
+          "date": "2025-08-20T12:00:00Z"<br>
+          }<br>
+        ]
+      </div>
+    </div>
+
+  </div>
+
+
+
+
+  </div>
+
+  <footer>
+    © 2025 Himwa API | Built with ❤️ for developers
+  </footer>
+
+</body>
+</html>
