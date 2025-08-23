@@ -42,6 +42,7 @@ class Team(models.Model):
 class Bill(models.Model):
     member_id = models.ForeignKey(Member, on_delete=models.CASCADE)
     biller_id = models.ForeignKey(Team, on_delete=models.CASCADE)
+    units = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     date = models.DateTimeField(auto_now_add=True)

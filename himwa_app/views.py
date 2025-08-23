@@ -2,10 +2,17 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import pyrebase
 import json
-from .models import Member, Bill, Team, Payment
+from .models import Member, Bill, Team, Payment, Notification
 from rest_framework.decorators import api_view
 from django.core.exceptions import ObjectDoesNotExist
 from decimal import Decimal
+from rest_framework.response import Response
+from .serializers import NotificationSerializer, BillSerializer, BillSummarySerializer
+import cloudinary.uploader
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import status
+from django.db.models import Sum, Max
 
 
 firebase_config = {
@@ -101,6 +108,8 @@ def signup(request):
         area_of_residence = request.data.get("area_of_residence")
         password = request.data.get("password")
 
+        print(area_of_residence)
+
         # Check if email already exists
         if Member.objects.filter(email=email).exists():
             return JsonResponse({"message": "An account with this email already exists"}, status=400)
@@ -179,6 +188,7 @@ def create_bill(request):
         bill = Bill.objects.create(
             member_id=member,
             biller_id=biller,
+            units=units,
             amount=amount,
             due_date=due_date,
         )
@@ -223,17 +233,13 @@ def get_all_bills(request):
 def get_member_bills(request, member_id):
     try:
         member = Member.objects.get(id=member_id)
-        bills = Bill.objects.filter(member_id=member).values(
-            "id",
-            "biller_id__member_id__fullname",
-            "amount",
-            "date",
-            "due_date",
-            "status"
-        )
-        return JsonResponse(list(bills), safe=False, status=200)
+        bills = Bill.objects.filter(member_id=member)
+        serializer = BillSerializer(bills, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Member.DoesNotExist:
+        return Response({"error": "Member not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -311,3 +317,92 @@ def get_member_transactions(request, member_id):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+# api to get notifications for a member
+@api_view(['GET'])
+@verify_firebase_token
+def get_notifications(request, member_id):
+    notifications = Notification.objects.filter(member_id=member_id).order_by('-date')
+    serializer = NotificationSerializer(notifications, many=True)
+    return Response(serializer.data)
+
+# api to send_expo_token to database
+@api_view(['GET'])
+@verify_firebase_token
+def send_expo_token(request, member_id, expo_token):
+    try:
+        member = Member.objects.get(id=member_id)
+        member.expo_token = expo_token
+        member.save()
+        return JsonResponse({"message":"Token saved successfully"})
+
+    except Member.DoesNotExist:
+        return JsonResponse({"message": "Member not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+# start of update profile api
+@api_view(['POST'])
+@parser_classes([MultiPartParser])
+@verify_firebase_token
+def updateprofile(request):
+    try:
+        member_id = request.data.get('member_id')
+        member_name = request.data.get('member_name')
+        phonenumber = request.data.get('phonenumber')
+        area_of_residence = request.data.get('area_of_residence')
+        profile_image = request.FILES.get('profile_image', None)
+
+        member = Member.objects.get(id=member_id)
+
+        if member_name:
+            member.fullname = member_name
+        if phonenumber:
+            member.phonenumber = phonenumber
+        if area_of_residence:
+            member.area_of_residence = area_of_residence
+        
+        image_url = None
+        if profile_image:
+            upload_result = cloudinary.uploader.upload(profile_image)
+            image_url = upload_result.get("secure_url")
+            member.profile_image = image_url  # Assuming this is an ImageField
+
+        member.save()
+        return JsonResponse({"message": "ok"})
+
+    except Member.DoesNotExist:
+        return JsonResponse({"message": "Member not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+# end of update profile api
+
+@api_view(["GET"])
+@verify_firebase_token
+def get_water_summary(request, member_id):
+    try:
+        # Check if member exists
+        member = Member.objects.get(id=member_id)
+
+        # Aggregate total units and last recorded bill date
+        data = Bill.objects.filter(member_id=member).aggregate(
+            total_units=Sum("units"),
+            last_recorded=Max("date")
+        )
+
+        if not data["total_units"]:
+            return Response(
+                {"message": "No water consumption records found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = BillSummarySerializer(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Member.DoesNotExist:
+        return Response({"error": "Member not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
